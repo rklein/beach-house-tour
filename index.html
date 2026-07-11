@@ -241,7 +241,7 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.2;
+renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 holder.appendChild(renderer.domElement);
@@ -249,7 +249,7 @@ const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(55, innerWidth/innerHeight, 0.3, 900);
 camera.up.set(0,0,1);
 
-const hemi = new THREE.HemisphereLight(0xffffff, 0x8a8674, 0.5);
+const hemi = new THREE.HemisphereLight(0xffffff, 0x8a8674, 0.34);
 hemi.position.set(0,0,1);
 scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff2dd, 0.75);
@@ -263,6 +263,25 @@ const sunTarget = new THREE.Object3D(); sunTarget.position.set(CX, CY, 0);
 scene.add(sunTarget); sun.target = sunTarget;
 scene.add(sun);
 const amb = new THREE.AmbientLight(0xffffff, 0.12); scene.add(amb);
+/* ---------- PBR environment (reflections for counters/brass/glass) ---------- */
+const pmrem = new THREE.PMREMGenerator(renderer);
+function makeEnv(nightMode){
+  const es = new THREE.Scene();
+  const sky = new THREE.Mesh(new THREE.SphereGeometry(60, 16, 8),
+    new THREE.MeshBasicMaterial({color: nightMode ? 0x141a28 : 0xcfe0ea, side: THREE.BackSide}));
+  es.add(sky);
+  const gnd = new THREE.Mesh(new THREE.CircleGeometry(50, 24),
+    new THREE.MeshBasicMaterial({color: nightMode ? 0x1a1814 : 0x8f8a7c}));
+  gnd.rotation.x = -Math.PI/2; gnd.position.y = -8; es.add(gnd);
+  const cardMat = new THREE.MeshBasicMaterial({color: nightMode ? 0xffd9a0 : 0xffffff});
+  for (const [cx, cy, cz, w, h] of [[-25, 18, 0, 22, 10], [25, 14, 8, 16, 8], [0, 22, -25, 30, 9]]){
+    const c = new THREE.Mesh(new THREE.PlaneGeometry(w, h), cardMat);
+    c.position.set(cx, cy, cz); c.lookAt(0, 4, 0); es.add(c);
+  }
+  return pmrem.fromScene(es, 0.05).texture;
+}
+const envDay = makeEnv(false), envNight = makeEnv(true);
+scene.environment = envDay;
 
 /* ground / site comes from data prims (kinds ground*) */
 const site = new THREE.Group();
@@ -458,7 +477,20 @@ for (const [key, g] of groups){
   geo.computeVertexNormals();
   const cat = PAINT[g.kind];
   let color = cat ? colorFor(g.room, cat) : (FIXED[g.kind] || "#cccccc");
-  const mat = new THREE.MeshLambertMaterial({color});
+  const PBRP = {
+    counter:{roughness:0.10, envMapIntensity:1.5}, brass:{roughness:0.28, metalness:1.0, envMapIntensity:1.3},
+    glass:{roughness:0.05, envMapIntensity:1.7}, guard:{roughness:0.06, envMapIntensity:1.4},
+    floor:{roughness:0.40, envMapIntensity:0.7}, cabinet:{roughness:0.35, envMapIntensity:0.8},
+    doorleaf:{roughness:0.5}, carpaint:{roughness:0.32, metalness:0.7, envMapIntensity:1.5},
+    rail:{roughness:0.45, metalness:0.7}, frame:{roughness:0.42, metalness:0.75},
+    facadeWood:{roughness:0.55}, fixture:{roughness:0.30, envMapIntensity:1.0},
+    stair:{roughness:0.85}, extstair:{roughness:0.9}, wall:{roughness:0.94, envMapIntensity:0.22}, ceil:{roughness:0.96, envMapIntensity:0.22},
+    facade:{roughness:0.96, envMapIntensity:0.35}, facadeStone:{roughness:0.96, envMapIntensity:0.35}, linen:{roughness:0.92, envMapIntensity:0.3}, rug:{roughness:1.0, envMapIntensity:0.25},
+    accent:{roughness:0.7}, roof:{roughness:0.88}, sedum:{roughness:1.0}, lawn:{roughness:1.0},
+    hedge:{roughness:0.95}, lsplant:{roughness:0.95}, canlight:{roughness:0.5},
+  };
+  const mat = new THREE.MeshStandardMaterial(Object.assign({color, roughness:0.85, metalness:0.0, envMapIntensity:0.30},
+                                                           PBRP[g.kind] || {}));
   const spec = TEXOF[g.kind];
   if (spec){
     addUVs(geo, spec[1]);
@@ -893,7 +925,9 @@ function styleFor(f){
 }
 let fixMeshes = [];
 function addFix(geom, color, x, y, z, l, kind, rotZ, opts){
-  const mat = new THREE.MeshLambertMaterial(Object.assign({color}, opts || {}));
+  const fp = kind === "fixbrass" ? {roughness:0.3, metalness:1.0, envMapIntensity:1.3}
+           : kind === "fixshade" ? {roughness:0.75} : {roughness:0.45};
+  const mat = new THREE.MeshStandardMaterial(Object.assign({color}, fp, opts || {}));
   const m = new THREE.Mesh(geom, mat);
   m.position.set(x, y, z);
   m.rotation.x = Math.PI / 2;                       // cylinders: axis Y -> world Z (up)
@@ -962,6 +996,7 @@ function buildFixtures(){
 /* day / night */
 let night = false;
 function fixtureGlow(){
+  scene.environment = night ? envNight : envDay;
   for (const mesh of meshes){
     const k = mesh.userData.kind;
     if (k === "pendant" || k === "cove"){
