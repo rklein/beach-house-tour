@@ -965,28 +965,69 @@ function buildFixtures(){
     }
     if (f.t === "pendant"){
       const g = f.gw;
-      addFix(new THREE.CylinderGeometry(0.035, 0.035, Math.max(0.05, f.zt - f.zg), 6), "#b08d4a",
+      addFix(new THREE.CylinderGeometry(0.028, 0.028, Math.max(0.05, f.zt - f.zg), 8), "#b08d4a",
              f.x, f.y, (f.zt + f.zg) / 2, f.l, "fixbrass");    // stem/cord
-      if (s === 0){        // drum shade (like Richard's render)
-        addFix(new THREE.CylinderGeometry(g*0.62, g*0.62, g*0.5, 18), "#e9dcc3",
-               f.x, f.y, f.zg - g*0.25, f.l, "fixshade");
-        addFix(new THREE.CylinderGeometry(g*0.56, g*0.56, 0.04, 18), "#ffedc9",
+      addFix(new THREE.CylinderGeometry(0.16, 0.19, 0.07, 14), "#b08d4a",
+             f.x, f.y, f.zt - 0.035, f.l, "fixbrass");         // ceiling canopy
+      if (f.r === "Dining"){                                   // HERO: brass sputnik (the CDMX look)
+        addFix(new THREE.SphereGeometry(0.15, 12, 10), "#b08d4a", f.x, f.y, f.zg, f.l, "fixbrass");
+        const up = new THREE.Vector3(0, 1, 0);
+        for (let k = 0; k < 8; k++){
+          const az = k * Math.PI / 4 + (k % 2) * 0.22;
+          const tilt = [0.85, 1.25, 1.85, 2.25][k % 4];
+          const L = 1.05 + (k % 3) * 0.22;
+          const wd = new THREE.Vector3(Math.sin(tilt) * Math.cos(az), Math.sin(tilt) * Math.sin(az), Math.cos(tilt));
+          const gd = new THREE.Vector3(wd.x, wd.z, -wd.y);     // world->geom frame (mesh is x-rotated)
+          const arm = new THREE.CylinderGeometry(0.028, 0.028, L, 8);
+          arm.translate(0, L / 2, 0);
+          arm.applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(
+            new THREE.Quaternion().setFromUnitVectors(up, gd.normalize())));
+          addFix(arm, "#b08d4a", f.x, f.y, f.zg, f.l, "fixbrass");
+          addFix(new THREE.SphereGeometry(0.15, 12, 10), "#ffe9c9",
+                 f.x + wd.x * L, f.y + wd.y * L, f.zg + wd.z * L, f.l, "fixglow");
+        }
+      } else if (f.r === "Foyer"){                             // HERO: 3-globe vertical cascade
+        for (let k = 0; k < 3; k++){
+          const dz = k * 0.85, dx = [0.0, 0.34, -0.3][k], dy = [0.0, -0.26, 0.3][k];
+          addFix(new THREE.CylinderGeometry(0.02, 0.02, dz + 0.3, 6), "#b08d4a",
+                 f.x + dx, f.y + dy, f.zg + 0.6 - (dz + 0.3) / 2, f.l, "fixbrass");
+          addFix(new THREE.SphereGeometry(0.30 - k * 0.05, 16, 12), "#ffe9c9",
+                 f.x + dx, f.y + dy, f.zg - dz * 0.45, f.l, "fixshade", 0, {transparent: true, opacity: 0.88});
+          addFix(new THREE.SphereGeometry(0.12, 10, 8), "#fff3dd",
+                 f.x + dx, f.y + dy, f.zg - dz * 0.45, f.l, "fixglow");
+        }
+      } else if (s === 0){ // drum: lathe profile w/ rolled rim + diffuser + finial
+        const pts = [];
+        for (let i = 0; i <= 10; i++){
+          const t = i / 10;
+          pts.push(new THREE.Vector2(g * (0.60 + 0.05 * Math.sin(t * Math.PI)), -g * 0.52 * t));
+        }
+        addFix(new THREE.LatheGeometry(pts, 24), "#e9dcc3", f.x, f.y, f.zg, f.l, "fixshade");
+        addFix(new THREE.CylinderGeometry(g*0.54, g*0.54, 0.035, 20), "#ffedc9",
                f.x, f.y, f.zg - g*0.5, f.l, "fixglow");
-      } else if (s === 1){ // glass globe cluster
-        addFix(new THREE.SphereGeometry(g*0.45, 14, 12), "#ffe9c9",
-               f.x, f.y, f.zg - g*0.45, f.l, "fixshade", 0, {transparent: true, opacity: 0.9});
-        addFix(new THREE.SphereGeometry(g*0.2, 10, 8), "#fff3dd",
-               f.x, f.y, f.zg - g*0.45, f.l, "fixglow");
-      } else if (s === 2){ // linear suspension bar
-        addFix(new THREE.BoxGeometry(g*1.9, 0.16, 0.12).rotateX(-Math.PI/2), "#3f3b36",
+        addFix(new THREE.SphereGeometry(0.05, 8, 6), "#b08d4a", f.x, f.y, f.zg + 0.06, f.l, "fixbrass");
+      } else if (s === 1){ // glass globe w/ brass fitter + visible bulb
+        addFix(new THREE.LatheGeometry([new THREE.Vector2(0.05,0), new THREE.Vector2(0.14,-0.05),
+               new THREE.Vector2(0.17,-0.16), new THREE.Vector2(0.12,-0.22)], 16), "#b08d4a",
+               f.x, f.y, f.zg + 0.05, f.l, "fixbrass");
+        addFix(new THREE.SphereGeometry(g*0.45, 20, 16), "#ffe9c9",
+               f.x, f.y, f.zg - g*0.42, f.l, "fixshade", 0, {transparent: true, opacity: 0.85});
+        addFix(new THREE.SphereGeometry(g*0.17, 12, 10), "#fff3dd",
+               f.x, f.y, f.zg - g*0.42, f.l, "fixglow");
+      } else if (s === 2){ // linear suspension w/ brass end caps
+        addFix(new THREE.BoxGeometry(g*1.9, 0.15, 0.11).rotateX(-Math.PI/2), "#3f3b36",
                f.x, f.y, f.zg, f.l, "sconce");
-        addFix(new THREE.BoxGeometry(g*1.8, 0.10, 0.05).rotateX(-Math.PI/2), "#fff3dd",
+        addFix(new THREE.BoxGeometry(g*1.8, 0.09, 0.05).rotateX(-Math.PI/2), "#fff3dd",
                f.x, f.y, f.zg - 0.08, f.l, "fixglow");
-      } else {             // slim cylinder shade
-        addFix(new THREE.CylinderGeometry(g*0.34, g*0.34, g*0.75, 14), "#2f2c28",
-               f.x, f.y, f.zg - g*0.37, f.l, "fixshade");
-        addFix(new THREE.CylinderGeometry(g*0.28, g*0.28, 0.05, 14), "#ffedc9",
-               f.x, f.y, f.zg - g*0.75, f.l, "fixglow");
+        for (const ex of [-g*0.95, g*0.95])
+          addFix(new THREE.BoxGeometry(0.1, 0.17, 0.13).rotateX(-Math.PI/2), "#b08d4a",
+                 f.x + ex, f.y, f.zg, f.l, "fixbrass");
+      } else {             // spun-metal cone (lathe) w/ glow mouth
+        addFix(new THREE.LatheGeometry([new THREE.Vector2(0.06,0), new THREE.Vector2(g*0.16,-g*0.18),
+               new THREE.Vector2(g*0.36,-g*0.68), new THREE.Vector2(g*0.38,-g*0.75)], 20), "#2f2c28",
+               f.x, f.y, f.zg, f.l, "fixshade");
+        addFix(new THREE.CylinderGeometry(g*0.3, g*0.3, 0.04, 16), "#ffedc9",
+               f.x, f.y, f.zg - g*0.74, f.l, "fixglow");
       }
     }
   }
