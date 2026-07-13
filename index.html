@@ -177,10 +177,6 @@ select#roomsel{appearance:none;background:var(--paper);border:1px solid var(--li
   <div class="swgroup" id="g-ctr"><h4>Counters</h4><div class="swatches" id="sw-counter"></div></div>
   <div class="swgroup" id="g-sconce"><h4>Sconces (this room)</h4><div class="swatches" id="sw-sconce"></div></div>
   <div class="swgroup" id="g-pendant"><h4>Pendants (this room)</h4><div class="swatches" id="sw-pendant"></div></div>
-  <div class="swgroup" id="g-lite"><h4>Lighting (this room)</h4>
-    <div class="literow"><label>Warmth</label><input type="range" id="lite-k" min="0" max="100" value="0"><span class="litecap" id="lite-k-cap">candle</span></div>
-    <div class="literow"><label>Brightness</label><input type="range" id="lite-dim" min="0" max="100" value="50"></div>
-  </div>
   <div class="footer"><button class="btn" id="resetroom">Reset room</button></div>
   <div id="savednote">Saved ✓</div>
 </div>
@@ -357,13 +353,11 @@ function extZoneOf(p){
   // garage = the low west wing; the primary suite ABOVE it (z>11) is house
   return (xmax < -8.05 && zmax < 11.2) ? "garage" : "house";
 }
-const LIGHTK = {canlight:1, lglow:1, lglowc:1, lwash:1, cove:1, pendant:1, fixshade:1, fixglow:1};
 function keyOf(p){
   const z = extZoneOf(p);
   if (z) return p.k + "|EXT" + z + "|" + p.l;
   const cat = PAINT[p.k];
   if (cat) return p.k + "|" + (p.r || "") + "|" + p.l;
-  if (LIGHTK[p.k] && p.r) return p.k + "|" + p.r + "|" + p.l;   // per-room lighting preview
   return p.k + "||" + p.l;
 }
 function pushBox(a, b, t, bs){
@@ -907,10 +901,6 @@ function openPanel(id){
   $("panelroom").textContent = r.label;
   $("g-cab").style.display = r.cabs ? "" : "none";
   $("g-ctr").style.display = r.cabs ? "" : "none";
-  const _lt = (design[id] && design[id].lite) || {k: 0, dim: 0.5};
-  $("lite-k").value = Math.round((_lt.k || 0) * 100);
-  $("lite-dim").value = Math.round((_lt.dim !== undefined ? _lt.dim : 0.5) * 100);
-  liteCap();
   for (const cat of ["floor","wall","cabinet","counter"]) renderSwatches(cat);
   renderFixtureChoices();
   $("panel").classList.add("open");
@@ -1008,7 +998,6 @@ function renderSwatches(cat){
 $("resetroom").addEventListener("click", () => {
   delete design[curRoom];
   repaint(curRoom); buildFixtures(); fixtureGlow();
-  $("lite-k").value = 0; $("lite-dim").value = 50; liteCap();
   for (const cat of ["floor","wall","cabinet","counter"]) renderSwatches(cat);
   renderFixtureChoices();
   persist(); savedNote();
@@ -1248,18 +1237,8 @@ function fixtureGlow(){
       mesh.material.emissive = new THREE.Color(0xffc27a);
       mesh.material.emissiveIntensity = night ? 0.35 : 0.0;
     }
-    // per-room lighting preview: warmth lerp + brightness multiplier
-    if (LIGHTK[k] && mesh.userData.room){
-      const _d = design[mesh.userData.room];
-      const _lt = _d && _d.lite;
-      if (_lt){
-        mesh.material.emissiveIntensity *= (0.15 + 1.7 * (_lt.dim !== undefined ? _lt.dim : 0.5));
-        mesh.material.emissive.lerp(LITE_COOL, _lt.k || 0);
-      }
-    }
   }
 }
-const LITE_COOL = new THREE.Color(0xdfe9ff);
 function applyLight(){
   if (night){
     scene.background = BG_NIGHT;
@@ -1326,20 +1305,6 @@ $("shotbtn").addEventListener("click", () => {
   a.href = renderer.domElement.toDataURL("image/png");
   a.click();
 });
-
-/* per-room lighting sliders */
-function liteCap(){
-  const v = +$("lite-k").value;
-  $("lite-k-cap").textContent = v < 25 ? "candle" : v < 55 ? "warm" : v < 80 ? "neutral" : "daylight";
-}
-function liteInput(){
-  if (!curRoom) return;
-  const d = design[curRoom] = design[curRoom] || {};
-  d.lite = {k: (+$("lite-k").value)/100, dim: (+$("lite-dim").value)/100};
-  liteCap(); persist(); fixtureGlow();
-}
-$("lite-k").addEventListener("input", liteInput);
-$("lite-dim").addEventListener("input", liteInput);
 
 /* tape measure */
 let measuring = false, mA = null;
