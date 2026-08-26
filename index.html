@@ -934,7 +934,8 @@ function renderFixtureChoices(){
   }
 }
 $("panelclose").addEventListener("click", () => { $("panel").classList.remove("open"); curRoom = null; roomsel.value = ""; });
-const EXT_PAL = [["Warm white (current)","#e7e1d3"],["Forest","#4d5f45"],["Coastal sage","#6f7c68"],
+const EXT_PAL = [["Warm white (current)","#e7e1d3"],["4135 Sage","#6f7a77"],["4135 Slate","#4a5158"],
+                 ["Forest","#4d5f45"],["Coastal sage","#6f7c68"],
                  ["Sand","#cbbfa8"],["Charcoal","#3a403c"],["Ink","#2d3a4d"]];
 function renderExt(){
   for (const z of ["house","garage"]){
