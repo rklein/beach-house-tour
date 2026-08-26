@@ -1255,6 +1255,7 @@ function applyLight(){
     sun.intensity = 0.88; sun.color.set(0xfff2dd);
     amb.intensity = 0.17; amb.color.set(0xfff6ea);
     $("nightbtn").textContent = "☀︎";
+    if (typeof applySunStudy === "function") applySunStudy();
   }
   fixtureGlow();
 }
@@ -1364,6 +1365,7 @@ function applySunStudy(){
 }
 $("sun-m").addEventListener("input", applySunStudy);
 $("sun-h").addEventListener("input", applySunStudy);
+applySunStudy(); /* default sun = real MB solar position (Jul 2pm) instead of studio NW light */
 
 /* share look — copies a URL whose #d= hash carries the current colors */
 $("sharebtn").addEventListener("click", () => {
