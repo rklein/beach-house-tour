@@ -1,3 +1,4 @@
+<!doctype html>
 <meta charset="utf-8">
 <title>1230 9th St · 3D Tour</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
@@ -117,6 +118,28 @@ select#roomsel{appearance:none;background:var(--paper);border:1px solid var(--li
   #panel{top:auto;left:8px;right:8px;bottom:8px;width:auto;max-height:46%;border-radius:14px}
   #scen{top:56px;left:8px}
 }
+/* Keep the house prominent; tools expand only when needed. */
+#topbar{gap:7px;padding:12px}
+#title p{font-size:10px;text-transform:none;letter-spacing:.02em}
+#title h1{font-family:inherit;font-size:15px;font-weight:650}
+.btn,.seg,select#roomsel,#title{border-radius:8px;box-shadow:0 3px 14px #152c3a12}
+#tools-menu{position:relative}
+#tools-menu summary{list-style:none}
+#tools-menu summary::-webkit-details-marker{display:none}
+#tools-menu summary:after{content:" +";color:var(--muted)}
+#tools-menu[open] summary:after{content:" −"}
+#tools-content{position:absolute;right:0;top:44px;width:210px;padding:8px;background:var(--paper-solid);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);display:grid;gap:5px}
+#tools-content .btn{text-align:left;box-shadow:none;background:transparent}
+#scen{top:var(--toolbar-bottom,76px)}
+#panel,#suncard{top:var(--toolbar-bottom,76px)}
+#viewpoints{position:fixed;right:16px;bottom:18px;z-index:18;display:flex;gap:3px;padding:4px;background:var(--paper);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:10px}
+#viewpoints button{font:inherit;font-size:12px;border:0;border-radius:6px;padding:8px 12px;background:transparent;color:var(--ink);cursor:pointer}
+#viewpoints button:hover,#viewpoints button:focus-visible{background:var(--accent);color:var(--accent-ink)}
+#hint{bottom:72px;max-width:90vw;text-align:center}
+.literow label,#sunlab{color:var(--ink)!important}
+@media(max-width:820px){#panel{top:auto;bottom:62px}#topbar{padding:8px;gap:5px}#title{padding:6px 10px}#viewpoints{right:8px;bottom:12px}#viewpoints button{padding:7px 10px}}
+@media(max-width:560px){#title{flex:1}#title h1{font-size:13px}#topbar>.spacer{display:none}#topbar>.seg{order:2}#roomsel{order:2;flex:1;max-width:none;min-width:100px}#topbar>.btn,#tools-menu summary{padding:7px 9px;font-size:12px}#suncard{right:8px}#scen{width:auto}#joy{bottom:65px;left:15px}#viewpoints{left:8px;justify-content:center}#hint{bottom:180px;font-size:11px}}
+@media(prefers-reduced-motion:reduce){#joy.on{animation:none}*{scroll-behavior:auto!important}}
 </style>
 
 <div id="scene"></div>
@@ -136,13 +159,16 @@ select#roomsel{appearance:none;background:var(--paper);border:1px solid var(--li
   <div class="spacer"></div>
   <button class="btn" id="nightbtn" title="Day / night">☀︎</button>
   <button class="btn" id="sunbtn" title="Sun position by month and hour">Sun ▾</button>
+  <details id="tools-menu"><summary class="btn">Tools</summary><div id="tools-content">
   <button class="btn" id="measbtn" title="Measure distances: click two points">Measure</button>
   <button class="btn" id="fixbtn" title="Cycle light-fixture style">✦ Drum</button>
   <button class="btn" id="covebtn" title="Show / hide the Alt 1-2 LED cove package">Coves ✓</button>
-  <button class="btn" id="yardbtn" title="Show / hide the living garage roof + finished landscaping">Yard ✓</button>
+  <button class="btn" id="yardbtn" title="Show / hide finished landscaping">Yard ✓</button>
   <button class="btn" id="lblbtn" title="Show / hide room labels">Labels ✓</button>
-  <button class="btn" id="shotbtn" title="Save a snapshot image">Snapshot</button>
+  <button class="btn" id="qualitybtn" title="Toggle contact shading">Detail ✓</button>
   <button class="btn" id="sharebtn" title="Copy a link that shows your current colors">Share look</button>
+  </div></details>
+  <button class="btn" id="shotbtn" title="Save a snapshot image">Snapshot</button>
 </div>
 
 <div id="scen">
@@ -157,7 +183,7 @@ select#roomsel{appearance:none;background:var(--paper);border:1px solid var(--li
     <h3 style="margin-top:10px">Exterior paint</h3>
     <div class="swgroup"><h4>Whole house stucco</h4><div class="swatches" id="sw-ext_house"></div></div>
     <div class="swgroup"><h4>Garage exterior</h4><div class="swatches" id="sw-ext_garage"></div></div>
-    <div id="scenrow" style="margin-top:6px">
+    <div class="scenresetrow" style="margin-top:6px">
       <button class="btn" id="scenreset" title="Clear all room overrides and show the curated baseline">Reset all to baseline</button>
     </div>
     <div id="scenname">
@@ -181,6 +207,7 @@ select#roomsel{appearance:none;background:var(--paper);border:1px solid var(--li
   <div id="savednote">Saved ✓</div>
 </div>
 
+<nav id="viewpoints" aria-label="Camera viewpoints"><button data-view="front">Arrival</button><button data-view="garden">Garden</button><button data-view="kitchen">Kitchen</button><button data-view="living">Living</button></nav>
 <div id="joy"><div id="nub"></div></div>
 <div id="hint"></div>
 <div id="suncard">
@@ -226,8 +253,8 @@ const FIXED = {
   brass:"#b08d4a", pendant:"#e9dcc3", cove:"#f2e7d2",
   canlight:"#f2efe7", sconce:"#3f3b36", lglow:"#f0ede4", flame:"#ff7f33",
   carpaint:"#1e2a22", bikeA:"#c9662e", bikeB:"#3e6b8f", accent:"#d9a441",
-  ground:"#9fae86", ground2:"#8f8d86", ground3:"#c9c4b6", ground4:"#bdb8ab",
-  lawn:"#93ad6d", sedum:"#86a05e", lsplant:"#5c7a45", lsbed:"#4a382a", lstrunk:"#6b5138",
+  ground:"#758563", ground2:"#8f8d86", ground3:"#c9c4b6", ground4:"#bdb8ab",
+  lawn:"#748954", sedum:"#86a05e", lsplant:"#5c7a45", lsbed:"#4a382a", lstrunk:"#6b5138",
   trim:"#eae5d9",
   lpool:"#ffdca8", aoin:"#5c574f", steel:"#b9bdbf", basin:"#e6eaea", wp:"#faf4e8",
   sofaInk:"#46525e", sofaRust:"#a86741", woodWal:"#7d5a39", gymmat:"#a4a7a3", lwash:"#ffd9a0",
@@ -270,7 +297,8 @@ renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
 renderer.outputEncoding = THREE.sRGBEncoding;
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.0;
+renderer.toneMappingExposure = 0.94;
+const SUN_DAY = 1.45;   // day sun strength (lights retuned 9/23 for linear color)
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 holder.appendChild(renderer.domElement);
@@ -284,10 +312,10 @@ scene.add(hemi);
 const sun = new THREE.DirectionalLight(0xfff2dd, 0.75);
 sun.position.set(CX-45, CY-70, 80);
 sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.mapSize.set(innerWidth < 560 ? 2048 : 4096, innerWidth < 560 ? 2048 : 4096);
 sun.shadow.camera.left = -75; sun.shadow.camera.right = 75;
 sun.shadow.camera.top = 75; sun.shadow.camera.bottom = -75;
-sun.shadow.camera.far = 260; sun.shadow.bias = -0.0004; sun.shadow.radius = 5;
+sun.shadow.camera.far = 260; sun.shadow.bias = -0.0004; sun.shadow.normalBias = 0; sun.shadow.radius = 3;
 const sunTarget = new THREE.Object3D(); sunTarget.position.set(CX, CY, 0);
 scene.add(sunTarget); sun.target = sunTarget;
 scene.add(sun);
@@ -298,7 +326,7 @@ function makeSky(nightMode){
   const g = c.getContext("2d");
   const gr = g.createLinearGradient(0, 0, 0, 512);
   if (nightMode){
-    gr.addColorStop(0, "#080d1a"); gr.addColorStop(0.55, "#101726"); gr.addColorStop(0.8, "#1c2331"); gr.addColorStop(1, "#262b38");
+    gr.addColorStop(0, "#0e1830"); gr.addColorStop(0.55, "#1a2744"); gr.addColorStop(0.8, "#2a3754"); gr.addColorStop(1, "#3a4258");
   } else {
     gr.addColorStop(0, "#7fb2d6"); gr.addColorStop(0.5, "#b8d6e8"); gr.addColorStop(0.75, "#e6eef2"); gr.addColorStop(1, "#f2ece0");
   }
@@ -313,7 +341,7 @@ function makeSky(nightMode){
     }
     g.globalAlpha = 1;
   }
-  return new THREE.CanvasTexture(c);
+  const t = new THREE.CanvasTexture(c); t.encoding = THREE.sRGBEncoding; return t;
 }
 const BG_DAY = makeSky(false), BG_NIGHT = makeSky(true);
 const pmrem = new THREE.PMREMGenerator(renderer);
@@ -330,7 +358,7 @@ function makeEnv(nightMode){
     const c = new THREE.Mesh(new THREE.PlaneGeometry(w, h), cardMat);
     c.position.set(cx, cy, cz); c.lookAt(0, 4, 0); es.add(c);
   }
-  return pmrem.fromScene(es, 0.05).texture;
+  return pmrem.fromScene(es, 0.025).texture;
 }
 const envDay = makeEnv(false), envNight = makeEnv(true);
 scene.environment = envDay;
@@ -375,6 +403,18 @@ function pushBox(a, b, t, bs){
     a.push(...c[i],...c[j],...c[k], ...c[i],...c[k],...c[l]);
   }
 }
+// Beveled furniture edges stay inside each original CAD bounding box.
+function pushSoftBox(out,b,kind){
+  const [x,y,z,X,Y,Z]=b,w=X-x,h=Y-y,d=Z-z;
+  const r=Math.min(kind==="counter"?.025:.10,w*.15,h*.15,d*.24);
+  if(r<.012){pushBox(out,b);return;}
+  // Extrude an inset rounded shape; bevel expands only to the original bounds.
+  const inset=new THREE.Shape(); const iw=w-2*r,ih=h-2*r;
+  inset.moveTo(0,0);inset.lineTo(iw,0);inset.lineTo(iw,ih);inset.lineTo(0,ih);inset.closePath();
+  const geo=new THREE.ExtrudeGeometry(inset,{depth:d-2*r,bevelEnabled:true,bevelThickness:r,bevelSize:r,bevelSegments:3,steps:1,curveSegments:3});
+  geo.translate(x+r,y+r,z+r);
+  const a=geo.attributes.position.array;for(let i=0;i<a.length;i++)out.push(a[i]);geo.dispose();
+}
 // powder-room wallpaper coverage: the room is built from many short double-skin
 // wall prims tagged with whatever zone their centroid fell in (Powder / Primary /
 // PriCloset / Hall209), so tag-based papering lands patchy. Retag any L2 wall
@@ -395,12 +435,17 @@ for (const p of DATA.prims){
   if (p.k === "wall" && p.l === "L2" && wpFrac(p) >= 0.66) p.r = "Powder";
 }
 for (const p of DATA.prims){
+  if(p.k === "hedge" || p.k === "lsplant") continue; // detailed foliage below
   const key = keyOf(p);
   if (!groups.has(key)) groups.set(key, {verts:[], kind:p.k, room:p.r, level:p.l});
   if (p.v) groups.get(key).verts.push(...p.v);
+  else if (["linen","sofaInk","sofaRust","furn","counter"].includes(p.k) && !p.t && !p.bslope) pushSoftBox(groups.get(key).verts,p.b,p.k);
   else pushBox(groups.get(key).verts, p.b, p.t || null, p.bslope || null);
 }
 /* ---------- procedural textures (CSP-safe: canvas only) ---------- */
+// Seeded finishes: reloads and saved snapshots keep exactly the same grain.
+let textureSeed = 12309;
+function textureRandom(){ textureSeed = (Math.imul(textureSeed, 1664525) + 1013904223) >>> 0; return textureSeed / 4294967296; }
 function makeTex(size, draw){
   const c = document.createElement("canvas"); c.width = c.height = size;
   const g = c.getContext("2d");
@@ -408,14 +453,14 @@ function makeTex(size, draw){
   const t = new THREE.CanvasTexture(c);
   t.wrapS = t.wrapT = THREE.RepeatWrapping;
   t.encoding = THREE.sRGBEncoding;
-  t.anisotropy = 4;
+  t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
   return t;
 }
 function noise(g, s, n, alpha, dark){
   for (let i = 0; i < n; i++){
-    const v = Math.random();
+    const v = textureRandom();
     g.fillStyle = `rgba(${dark?0:255},${dark?0:255},${dark?0:255},${alpha*v})`;
-    g.fillRect(Math.random()*s, Math.random()*s, 1+Math.random()*2, 1+Math.random()*2);
+    g.fillRect(textureRandom()*s, textureRandom()*s, 1+textureRandom()*2, 1+textureRandom()*2);
   }
 }
 const TEX = {
@@ -424,20 +469,20 @@ const TEX = {
     const rows = 6;
     for (let r = 0; r < rows; r++){
       const y = r*s/rows;
-      const tone = 235 + Math.floor(Math.random()*20);
+      const tone = 235 + Math.floor(textureRandom()*20);
       g.fillStyle = `rgb(${tone},${tone-4},${tone-8})`;
       g.fillRect(0, y, s, s/rows);
       for (let k = 0; k < 26; k++){                    // grain streaks
-        g.strokeStyle = `rgba(120,90,60,${0.05+Math.random()*0.08})`;
+        g.strokeStyle = `rgba(120,90,60,${0.05+textureRandom()*0.08})`;
         g.lineWidth = 0.8;
-        const gy = y + Math.random()*s/rows;
+        const gy = y + textureRandom()*s/rows;
         g.beginPath(); g.moveTo(0, gy);
-        g.bezierCurveTo(s*0.3, gy+Math.random()*3-1.5, s*0.6, gy+Math.random()*3-1.5, s, gy);
+        g.bezierCurveTo(s*0.3, gy+textureRandom()*3-1.5, s*0.6, gy+textureRandom()*3-1.5, s, gy);
         g.stroke();
       }
       g.fillStyle = "rgba(70,50,35,0.55)";             // plank seam
       g.fillRect(0, y, s, 1.6);
-      const bx = Math.random()*s;                      // butt joint
+      const bx = textureRandom()*s;                      // butt joint
       g.fillRect(bx, y, 1.6, s/rows);
     }
   }),
@@ -450,7 +495,7 @@ const TEX = {
     }
     for (let i = 0; i < n*n; i++){
       const x = (i%n)*s/n, y = Math.floor(i/n)*s/n;
-      const v = 244 + Math.floor(Math.random()*10);
+      const v = 244 + Math.floor(textureRandom()*10);
       g.fillStyle = `rgba(${v},${v-2},${v-6},0.65)`;
       g.fillRect(x+2, y+2, s/n-4, s/n-4);
     }
@@ -463,12 +508,12 @@ const TEX = {
   marble: makeTex(512, (g, s) => {
     g.fillStyle = "#fcfbf9"; g.fillRect(0, 0, s, s);
     for (let v = 0; v < 7; v++){
-      g.strokeStyle = `rgba(105,105,115,${0.16+Math.random()*0.2})`;
-      g.lineWidth = 1 + Math.random()*2.2;
+      g.strokeStyle = `rgba(105,105,115,${0.16+textureRandom()*0.2})`;
+      g.lineWidth = 1 + textureRandom()*2.2;
       g.beginPath();
-      let x = Math.random()*s, y = 0;
+      let x = textureRandom()*s, y = 0;
       g.moveTo(x, y);
-      while (y < s){ x += Math.random()*44-22; y += 18+Math.random()*26; g.lineTo(x, y); }
+      while (y < s){ x += textureRandom()*44-22; y += 18+textureRandom()*26; g.lineTo(x, y); }
       g.stroke();
     }
     noise(g, s, 500, 0.04, true);
@@ -476,7 +521,7 @@ const TEX = {
   linen: makeTex(256, (g, s) => {
     g.fillStyle = "#fbfaf7"; g.fillRect(0, 0, s, s);
     for (let i = 0; i < s; i += 3){
-      g.fillStyle = `rgba(120,110,95,${0.04+Math.random()*0.05})`;
+      g.fillStyle = `rgba(120,110,95,${0.04+textureRandom()*0.05})`;
       g.fillRect(0, i, s, 1); g.fillRect(i, 0, 1, s);
     }
   }),
@@ -484,8 +529,8 @@ const TEX = {
     g.fillStyle = "#fdfdf9"; g.fillRect(0, 0, s, s);
     noise(g, s, 5200, 0.10, true);
     for (let i = 0; i < 1400; i++){
-      g.fillStyle = `rgba(60,90,40,${0.05+Math.random()*0.1})`;
-      g.fillRect(Math.random()*s, Math.random()*s, 1.5, 3);
+      g.fillStyle = `rgba(60,90,40,${0.05+textureRandom()*0.1})`;
+      g.fillRect(textureRandom()*s, textureRandom()*s, 1.5, 3);
     }
   }),
   asphalt: makeTex(256, (g, s) => {
@@ -571,20 +616,55 @@ TEX.wallpaper = makeTex(512, (g, s) => {
     g.beginPath(); g.arc(cx - 30, cy - 18, 2.0, 0, 7); g.fill();
   }
 });
+// Continuous rift-cut grain for joinery (no flooring seams on cabinet fronts).
+TEX.joinery = makeTex(512, (g,s) => {
+  g.fillStyle="#f2eee7"; g.fillRect(0,0,s,s);
+  for(let i=0;i<550;i++){
+    const x=textureRandom()*s;
+    g.strokeStyle=`rgba(95,72,44,${0.015+textureRandom()*0.045})`;g.lineWidth=0.35+textureRandom()*1.2;
+    g.beginPath();g.moveTo(x,0);g.bezierCurveTo(x+6*Math.sin(i),s*.3,x-4*Math.sin(i),s*.7,x,s);g.stroke();
+  }
+});
+TEX.plaster = makeTex(256,(g,s)=>{
+  g.fillStyle="#fafafa";g.fillRect(0,0,s,s);noise(g,s,9000,.035,true);
+});
+// Soft, continuous stone veins instead of angular polyline cracks.
+TEX.marble=makeTex(1024,(g,s)=>{
+  g.fillStyle="#faf9f6";g.fillRect(0,0,s,s);
+  for(let vein=0;vein<5;vein++){
+    const offset=textureRandom()*s,phase=textureRandom()*6.28;
+    const path=new Path2D();
+    for(let y=0;y<=s;y+=3){
+      const x=offset+y*.19+22*Math.sin(y*.008+phase)+7*Math.sin(y*.027+phase);
+      if(y===0)path.moveTo(x,y);else path.lineTo(x,y);
+    }
+    g.lineWidth=8;g.strokeStyle="rgba(140,138,128,.035)";g.stroke(path);
+    g.lineWidth=2.2;g.strokeStyle="rgba(125,126,124,.12)";g.stroke(path);
+    g.lineWidth=.7;g.strokeStyle="rgba(116,118,117,.10)";g.stroke(path);
+  }
+  noise(g,s,5000,.02,true);
+});
+// Separate linear height maps: color textures must not double as sRGB bump data.
+const HEIGHT = {};
+for(const name of ["wood","joinery","stucco","plaster","linen","tile","marble","asphalt","seam"]){
+  HEIGHT[name]=TEX[name].clone(); HEIGHT[name].encoding=THREE.LinearEncoding; HEIGHT[name].needsUpdate=true;
+}
+const WOOD_CABINETS=new Set(["#5b4632","#c49a6c"]);
 const TILE_HEXES = new Set(["#d9d2c7","#b7b1a5","#8a8f94","#c4b9a9","#5f6664","#b06a45"]);
 const FLOOR_TEXBY = {"#e7e1d3":"checker","#4e6e5a":"zellige","#c98f78":"zellige","#7d6a5e":"cementstar"};
 function floorTexFor(hex){
   return FLOOR_TEXBY[hex] || (TILE_HEXES.has(hex) ? "tile" : "wood");
 }
 const TEXOF = {
-  floor:["wood",7], deck:["tile",4], wall:["stucco",9], facade:["stucco",9],
-  facadeStone:["stucco",9], facadeWood:["wood",5], chimney:["tile",2.6], brick:["tile",1.4], ceil:["stucco",10], counter:["marble",5.5],
+  floor:["wood",7], deck:["tile",4], wall:["plaster",1.2], facade:["stucco",1.4],
+  facadeStone:["stucco",1.4], facadeWood:["joinery",4], chimney:["tile",2.6], brick:["tile",1.4], ceil:["plaster",1.5], counter:["marble",5.5],
   rug:["linen",4.5],
   furn:["linen",4], fixture:null, cabinet:null, roof:["stucco",12], roofdeck:["stucco",8],
   ground:["grass",22], lawn:["grass",15], sedum:["grass",8], ground2:["asphalt",9], ground3:["stucco",8], ground4:["asphalt",7],
-  cabinet:["wood",5], wp:["wallpaper",2.6], woodWal:["wood",4], sofaInk:["linen",4], sofaRust:["linen",4],
+  cabinet:["joinery",4], wp:["wallpaper",2.6], woodWal:["joinery",4], sofaInk:["linen",4], sofaRust:["linen",4],
   roof:["seam",14],
-  stair:["stucco",8], extstair:["stucco",8], door:["linen",5],
+  linen:["linen",0.8], doorleaf:["joinery",4],
+  stair:["stucco",2], extstair:["stucco",8], door:["linen",5],
 };
 function addUVs(geo, scale){
   const pos = geo.getAttribute("position");
@@ -616,8 +696,8 @@ for (const [key, g] of groups){
   const cat = PAINT[g.kind];
   let color = cat ? colorFor(g.room, cat) : (FIXED[g.kind] || "#cccccc");
   const PBRP = {
-    counter:{roughness:0.10, envMapIntensity:1.5}, brass:{roughness:0.28, metalness:1.0, envMapIntensity:1.3},
-    glass:{roughness:0.05, envMapIntensity:1.7}, guard:{roughness:0.06, envMapIntensity:1.4},
+    counter:{roughness:0.24, envMapIntensity:0.85}, brass:{roughness:0.28, metalness:1.0, envMapIntensity:1.3},
+    glass:{roughness:0.08, metalness:0.15, envMapIntensity:1.05}, guard:{roughness:0.08, metalness:0.1, envMapIntensity:0.9},
     floor:{roughness:0.40, envMapIntensity:0.7}, cabinet:{roughness:0.35, envMapIntensity:0.8},
     doorleaf:{roughness:0.5}, carpaint:{roughness:0.32, metalness:0.7, envMapIntensity:1.5},
     rail:{roughness:0.45, metalness:0.7}, frame:{roughness:0.42, metalness:0.75},
@@ -633,38 +713,80 @@ for (const [key, g] of groups){
   };
   const mat = new THREE.MeshStandardMaterial(Object.assign({color, roughness:0.85, metalness:0.0, envMapIntensity:0.30},
                                                            PBRP[g.kind] || {}));
+  mat.color.convertSRGBToLinear();   // hex swatches are sRGB; r128 wants linear (else every finish renders washed out)
   const spec = TEXOF[g.kind];
   if (spec){
     addUVs(geo, spec[1]);
     let texName = spec[0];
     if (g.kind === "floor") texName = floorTexFor(color.toLowerCase());
+    if (g.kind === "cabinet" && !WOOD_CABINETS.has(color.toLowerCase())) texName="plaster";
     mat.map = TEX[texName];
     mat.userData = { texName };
+    if(HEIGHT[texName]){
+      mat.bumpMap=HEIGHT[texName];
+      mat.bumpScale=({wood:0.018,joinery:0.004,stucco:0.025,plaster:0.006,linen:0.015,tile:0.012,marble:0.003,asphalt:0.02,seam:0.04})[texName];
+    }
   }
-  if (g.kind === "art"){ addUVs(geo, 3.2); mat.map = TEX.artpaint; mat.color.set("#efe9dd"); }
-  if (g.kind === "glass"){ mat.transparent = true; mat.opacity = 0.22; mat.depthWrite = false; }
+  if (g.kind === "art"){ addUVs(geo, 3.2); mat.map = TEX.artpaint; mat.color.set("#efe9dd").convertSRGBToLinear(); }
+  if (g.kind === "glass"){ mat.transparent = true; mat.opacity = 0.16; mat.depthWrite = false; }
   if (g.kind === "ghost"){ mat.transparent = true; mat.opacity = 0.16; mat.depthWrite = false; }
   if (g.kind === "lpool" || g.kind === "lwash"){ mat.transparent = true; mat.opacity = 0.0; mat.depthWrite = false; }
   if (g.kind === "aoin"){ mat.transparent = true; mat.opacity = 0.16; mat.depthWrite = false; }
-  if (g.kind === "guard"){ mat.transparent = true; mat.opacity = 0.55; }
+  if (g.kind === "guard"){ mat.transparent = true; mat.opacity = 0.20; mat.depthWrite = false; }
   const mesh = new THREE.Mesh(geo, mat);
-  mesh.castShadow = g.kind !== "glass" && g.kind !== "floor" && g.kind !== "ghost";
+  mesh.castShadow = !["glass","guard","ghost","aoin","aoshadow","lwash","lpool"].includes(g.kind);
   mesh.receiveShadow = true;
   mesh.userData = {kind:g.kind, room:g.room, level:g.level, cat};
   matByKey.set(key, mat);
   scene.add(mesh);
   meshes.push(mesh);
 }
+/* ---------- Organic planting in the existing model's planting envelopes ---------- */
+function buildFoliage(){
+  const byLevel=new Map();
+  for(const p of DATA.prims){
+    if(p.k!=="hedge" && p.k!=="lsplant")continue;
+    const key=p.k+"|"+p.l;
+    if(!byLevel.has(key))byLevel.set(key,[]);
+    const b=p.b;if(!b)continue;
+    const [x,y,z,X,Y,Z]=b, sx=X-x,sy=Y-y,sz=Z-z;
+    const count=Math.min(650,Math.max(70,Math.round(sx*sy*sz*85)));
+    for(let i=0;i<count;i++){
+      const u=textureRandom()*2-1,v=textureRandom()*2-1,w=textureRandom()*2-1;
+      // Softened rectangular hedges, round crowns on taller individual plants.
+      const round=Math.max(sx,sy)<sz*2;
+      if(round && u*u+v*v+w*w>1)continue;
+      const size=Math.min(.28,Math.min(sx,sy,sz)*.22)*(.6+textureRandom()*.8);
+      byLevel.get(key).push({x:(x+X)/2+u*sx*.48,y:(y+Y)/2+v*sy*.48,z:(z+Z)/2+w*sz*.48,size,a:textureRandom()*Math.PI*2,t:textureRandom()});
+    }
+  }
+  const leafGeo=new THREE.SphereGeometry(1,6,4),dummy=new THREE.Object3D();
+  for(const [key,leaves] of byLevel){
+    const [kind,level]=key.split('|');
+    const mat=new THREE.MeshStandardMaterial({color:0xffffff,roughness:.91,envMapIntensity:.18});
+    const mesh=new THREE.InstancedMesh(leafGeo,mat,leaves.length);
+    leaves.forEach((p,i)=>{
+      dummy.position.set(p.x,p.y,p.z);dummy.rotation.set(p.a,p.t*2,p.a*.7);dummy.scale.set(p.size*.52,p.size*1.3,p.size*.22);dummy.updateMatrix();mesh.setMatrixAt(i,dummy.matrix);
+      mesh.setColorAt(i,new THREE.Color().setHSL(.23+p.t*.055,.22+p.t*.2,.20+p.t*.17).convertSRGBToLinear());
+    });
+    mesh.instanceMatrix.needsUpdate=true;mesh.instanceColor.needsUpdate=true;
+    mesh.castShadow=true;mesh.receiveShadow=true;mesh.frustumCulled=false;
+    mesh.userData={kind,level,room:null};scene.add(mesh);meshes.push(mesh);
+  }
+}
+buildFoliage();
+
 function repaint(room){
   for (const mesh of meshes){
     const u = mesh.userData;
     if (u.room === room && u.cat){
       const hex = colorFor(room, u.cat);
-      mesh.material.color.set(hex);
-      if (u.cat === "floor" && mesh.material.map){
-        const want = floorTexFor(hex.toLowerCase());
+      mesh.material.color.set(hex).convertSRGBToLinear();
+      if ((u.cat === "floor" || u.cat === "cabinet") && mesh.material.map){
+        const want = u.cat === "floor" ? floorTexFor(hex.toLowerCase()) : (WOOD_CABINETS.has(hex.toLowerCase()) ? "joinery" : "plaster");
         if (mesh.material.userData.texName !== want){
           mesh.material.map = TEX[want];
+          mesh.material.bumpMap = HEIGHT[want] || null;
           mesh.material.userData.texName = want;
           mesh.material.needsUpdate = true;
         }
@@ -679,7 +801,7 @@ function repaintExterior(){
     const gi = key.indexOf("|EXTgarage|"), hi = key.indexOf("|EXThouse|");
     if (gi === -1 && hi === -1) continue;
     const kind = key.slice(0, gi !== -1 ? gi : hi);
-    mat.color.set(design["_ext_" + (gi !== -1 ? "garage" : "house")] || FIXED[kind]);
+    mat.color.set(design["_ext_" + (gi !== -1 ? "garage" : "house")] || FIXED[kind]).convertSRGBToLinear();
   }
 }
 function repaintAll(){ for (const r of DATA.rooms) repaint(r.id); repaintExterior(); }
@@ -688,6 +810,7 @@ function repaintAll(){ for (const r of DATA.rooms) repaint(r.id); repaintExterio
 let mode = "doll";          // doll | walk
 let floorSel = "whole";     // whole | l1 | l2
 function applyVis(){
+  renderer.shadowMap.needsUpdate=true;
   for (const mesh of meshes){
     const u = mesh.userData;
     let v = true;
@@ -704,6 +827,7 @@ function applyVis(){
       ((floorSel === "l1" && sp.userData.level === "L1") || (floorSel === "l2" && sp.userData.level === "L2"));
   }
   site.visible = (mode === "walk") || floorSel !== "l2" ? true : true;
+  for(const light of practicalLights){light.visible=night && !(mode==="doll" && floorSel==="l1" && light.userData.level==="L2");}
   // single-floor dollhouse = plan reading: kill cast shadows so rooms stay legible
   sun.castShadow = !(mode === "doll" && floorSel !== "whole");
 }
@@ -739,7 +863,7 @@ for (const r of DATA.rooms){
 
 /* ================= cameras & controls ================= */
 const OM = DATA.meta.orbit || {};
-const orbit = { theta: -2.25, phi: 0.55, r: (OM.r || 95) * (innerWidth < 560 ? 1.5 : 1),
+const orbit = { theta: 3.48, phi: 0.28, r: (OM.r || 95) * (innerWidth < 560 ? 1.5 : 1),
                 tx: OM.tx ?? CX, ty: OM.ty ?? (CY-4), tz: OM.tz ?? 6 };
 function orbitCam(){
   const ct = Math.cos(orbit.theta), st = Math.sin(orbit.theta);
@@ -1031,7 +1155,7 @@ function setMode(m){
   } else {
     showHint("Drag to orbit · tap a room to design it · double-click a floor to walk there");
   }
-  amb.intensity = (m === "walk" && !night) ? 0.38 : (night ? 0.34 : 0.24);
+  amb.intensity = night ? 0.16 : (m === "walk" ? 0.18 : 0.10);
   applyVis();
 }
 function setFloor(f, quiet){
@@ -1075,7 +1199,10 @@ function addFix(geom, color, x, y, z, l, kind, rotZ, opts){
   const fp = kind === "fixbrass" ? {roughness:0.3, metalness:1.0, envMapIntensity:1.3}
            : kind === "fixshade" ? {roughness:0.75} : {roughness:0.45};
   const mat = new THREE.MeshStandardMaterial(Object.assign({color}, fp, opts || {}));
+  mat.color.convertSRGBToLinear();
+  if(kind==="fixshade")mat.side=THREE.DoubleSide;
   const m = new THREE.Mesh(geom, mat);
+  m.receiveShadow=true;
   m.position.set(x, y, z);
   m.rotation.x = Math.PI / 2;                       // cylinders: axis Y -> world Z (up)
   if (rotZ) m.rotation.z = rotZ;
@@ -1181,9 +1308,24 @@ function buildFixtures(){
   fixtureGlow(); applyVis();
 }
 
+// Light the surfaces under the existing pendant fixtures at night.
+const practicalLights=[];
+for(const f of DATA.lights || []){
+  if(f.t!=="pendant")continue;
+  const light=new THREE.SpotLight(0xffdfb1,0,24,Math.PI*.39,.85,1.4);
+  light.position.set(f.x,f.y,f.zg-.48);
+  light.target.position.set(f.x,f.y,f.l==="L2"?F2F:0);
+  light.castShadow=true;light.shadow.mapSize.set(512,512);
+  light.shadow.bias=-.001;light.shadow.camera.near=.15;light.shadow.camera.far=26;
+  light.userData.level=f.l;scene.add(light,light.target);practicalLights.push(light);
+}
 /* day / night */
 let night = false;
 function fixtureGlow(){
+  for(const light of practicalLights){
+    light.intensity=night?2.4:0;
+    light.visible=night && !(mode==="doll" && floorSel==="l1" && light.userData.level==="L2");
+  }
   scene.environment = night ? envNight : envDay;
   for (const mesh of meshes){
     const k = mesh.userData.kind;
@@ -1193,7 +1335,7 @@ function fixtureGlow(){
     }
     if (k === "brass"){
       mesh.material.emissive = new THREE.Color(0xffb864);
-      mesh.material.emissiveIntensity = night ? 0.25 : 0.0;
+      mesh.material.emissiveIntensity = 0.0;
     }
     if (k === "lglow" || k === "lglowc"){
       mesh.material.emissive = new THREE.Color(0xffbe72);
@@ -1205,8 +1347,8 @@ function fixtureGlow(){
     }
     if (k === "glass"){
       mesh.material.emissive = new THREE.Color(0xffc98a);
-      mesh.material.emissiveIntensity = night ? 0.85 : 0.0;
-      mesh.material.opacity = night ? 0.5 : 0.22;
+      mesh.material.emissiveIntensity = night ? 0.05 : 0.0;
+      mesh.material.opacity = night ? 0.23 : 0.16;
     }
     if (k === "lpool"){
       mesh.material.emissive = new THREE.Color(0xffc98a);
@@ -1228,7 +1370,7 @@ function fixtureGlow(){
     }
     if (k === "fixbrass"){
       mesh.material.emissive = new THREE.Color(0xffb864);
-      mesh.material.emissiveIntensity = night ? 0.25 : 0.0;
+      mesh.material.emissiveIntensity = 0.0;
     }
     if (k === "canlight"){
       mesh.material.emissive = new THREE.Color(0xfff3dd);
@@ -1236,24 +1378,25 @@ function fixtureGlow(){
     }
     if (k === "glass" && mesh.userData.level !== "ROOF"){
       mesh.material.emissive = new THREE.Color(0xffc27a);
-      mesh.material.emissiveIntensity = night ? 0.35 : 0.0;
+      mesh.material.emissiveIntensity = night ? 0.08 : 0.0;
     }
   }
 }
 function applyLight(){
+  renderer.shadowMap.needsUpdate=true;
   if (night){
     scene.background = BG_NIGHT;
     scene.fog = new THREE.Fog(0x17202c, 180, 420);
     hemi.intensity = 0.13; hemi.color.set(0x93a6c4); hemi.groundColor.set(0x2c2b26);
     sun.intensity = 0.08; sun.color.set(0xb8c4e2);
-    amb.intensity = 0.24; amb.color.set(0xffd9a6);
+    amb.intensity = 0.16; amb.color.set(0xffd9a6);
     $("nightbtn").textContent = "☾";
   } else {
     scene.background = BG_DAY;
     scene.fog = new THREE.Fog(0xd7e8ef, 220, 520);
-    hemi.intensity = 0.40; hemi.color.set(0xffffff); hemi.groundColor.set(0x8f887a);
-    sun.intensity = 0.88; sun.color.set(0xfff2dd);
-    amb.intensity = 0.17; amb.color.set(0xfff6ea);
+    hemi.intensity = 0.50; hemi.color.set(0xdfeeff); hemi.groundColor.set(0x6f6a5c);
+    sun.intensity = SUN_DAY; sun.color.set(0xfff2dd);
+    amb.intensity = mode === "walk" ? 0.18 : 0.10; amb.color.set(0xfff6ea);
     $("nightbtn").textContent = "☀︎";
     if (typeof applySunStudy === "function") applySunStudy();
   }
@@ -1271,14 +1414,7 @@ $("covebtn").textContent = covesOn ? "Coves ✓" : "Coves ✗";
 $("covebtn").addEventListener("click", () => {
   covesOn = !covesOn;
   localStorage.setItem("mb3d_coves", covesOn ? "1" : "0");
-  $("lblbtn").textContent = labelsOn ? "Labels ✓" : "Labels ✗";
-$("lblbtn").addEventListener("click", () => {
-  labelsOn = !labelsOn;
-  localStorage.setItem("mb3d_labels", labelsOn ? "1" : "0");
-  $("lblbtn").textContent = labelsOn ? "Labels ✓" : "Labels ✗";
-  applyVis();
-});
-$("covebtn").textContent = covesOn ? "Coves ✓" : "Coves ✗";
+  $("covebtn").textContent = covesOn ? "Coves ✓" : "Coves ✗";
   applyVis();
 });
 $("yardbtn").textContent = yardOn ? "Yard ✓" : "Yard ✗";
@@ -1301,7 +1437,7 @@ $("fixbtn").addEventListener("click", () => {
 
 /* snapshot */
 $("shotbtn").addEventListener("click", () => {
-  renderer.render(scene, camera);
+  renderFrame();
   const a = document.createElement("a");
   a.download = "1230-9th-st-tour.png";
   a.href = renderer.domElement.toDataURL("image/png");
@@ -1345,6 +1481,7 @@ function measureClick(pt){
 const SUN_LAT = 33.884 * Math.PI / 180;
 $("sunbtn").addEventListener("click", () => $("suncard").classList.toggle("open"));
 function applySunStudy(){
+  renderer.shadowMap.needsUpdate=true;
   const m = +$("sun-m").value, h = +$("sun-h").value;
   const N = Math.round(30.4 * (m - 0.5));
   const decl = 23.45 * Math.PI / 180 * Math.sin(2 * Math.PI * (284 + N) / 365);
@@ -1360,7 +1497,7 @@ function applySunStudy(){
   const dx = Math.cos(az) * Math.cos(a), dy = -Math.sin(az) * Math.cos(a), dz = Math.sin(a);
   sun.position.set(CX + dx * 110, CY + dy * 110, dz * 110 + 6);
   const low = Math.min(1, Math.max(0, (0.35 - alt) / 0.35));
-  sun.intensity = alt <= 0 ? 0.12 : 0.88 * Math.max(0.3, Math.sin(alt) + 0.15);
+  sun.intensity = alt <= 0 ? 0.25 : SUN_DAY * Math.max(0.3, Math.sin(alt) + 0.15);
   sun.color.setHSL(0.09 - 0.02 * low, 0.45 + 0.4 * low, 0.78 - 0.2 * low);
 }
 $("sun-m").addEventListener("input", applySunStudy);
@@ -1460,6 +1597,111 @@ function showHint(t){
   clearTimeout(hintT); hintT = setTimeout(() => h.classList.remove("show"), 4200);
 }
 
+/* ---------- Contact shading: normals/depth, SSAO, bilateral composite ----------
+   All shaders are inline; no network, build tool, or extra library is needed.
+   Color renders once to an sRGB target. The final shader copies that display
+   color without applying tone mapping or sRGB encoding a second time. */
+const canDetail=renderer.capabilities.isWebGL2 || !!renderer.extensions.get('WEBGL_depth_texture');
+let detailOn=canDetail && localStorage.getItem('mb3d_detail')!=='0';
+const colorRT=renderer.capabilities.isWebGL2 ? new THREE.WebGLMultisampleRenderTarget(1,1) : new THREE.WebGLRenderTarget(1,1);
+colorRT.texture.encoding=THREE.sRGBEncoding;
+// r128 otherwise uses 16-bit offscreen depth, causing z-fighting in CAD skins.
+if(canDetail)colorRT.depthTexture=new THREE.DepthTexture(1,1,THREE.UnsignedIntType);
+if(renderer.capabilities.isWebGL2)colorRT.samples=4;
+const geometryRT=new THREE.WebGLRenderTarget(1,1,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter});
+if(canDetail)geometryRT.depthTexture=new THREE.DepthTexture(1,1,THREE.UnsignedIntType);
+const aoRT=new THREE.WebGLRenderTarget(1,1,{depthBuffer:false});
+const normalMat=new THREE.MeshNormalMaterial();
+const postScene=new THREE.Scene(),postCamera=new THREE.OrthographicCamera(-1,1,1,-1,0,1);
+const quad=new THREE.Mesh(new THREE.PlaneGeometry(2,2));quad.frustumCulled=false;postScene.add(quad);
+const postVertex='varying vec2 vUv; void main(){vUv=uv;gl_Position=vec4(position.xy,0.,1.);}';
+const aoMat=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,toneMapped:false,
+  uniforms:{tDepth:{value:geometryRT.depthTexture},tNormal:{value:geometryRT.texture},inverseProjection:{value:new THREE.Matrix4()},projection:{value:camera.projectionMatrix},radius:{value:0.95},aspect:{value:1},resolution:{value:new THREE.Vector2()}},
+  vertexShader:postVertex,
+  fragmentShader:`
+    varying vec2 vUv;uniform sampler2D tDepth,tNormal;uniform mat4 inverseProjection,projection;uniform float radius,aspect;uniform vec2 resolution;
+    vec3 pointAt(vec2 uv,float depth){vec4 p=inverseProjection*vec4(uv*2.-1.,depth*2.-1.,1.);return p.xyz/p.w;}
+    void main(){
+      float depth=texture2D(tDepth,vUv).x;
+      if(depth>.999999){gl_FragColor=vec4(1.);return;}
+      vec3 p=pointAt(vUv,depth), n=normalize(texture2D(tNormal,vUv).xyz*2.-1.);
+      float screenRadius=min(.15,radius*projection[1][1]/max(-p.z,.01)*.5), sum=0.;
+      for(int i=0;i<24;i++){
+        float f=(float(i)+.5)/24.,angle=float(i)*2.399963;
+        vec2 uv=vUv+vec2(cos(angle)/aspect,sin(angle))*screenRadius*sqrt(f);
+        if(uv.x<0.||uv.x>1.||uv.y<0.||uv.y>1.)continue;
+        uv=(floor(uv*resolution)+.5)/resolution;
+        float sd=texture2D(tDepth,uv).x;if(sd>.999999)continue;
+        vec3 delta=pointAt(uv,sd)-p;float d=length(delta);
+        float horizon=max(0.,dot(n,delta)/max(d,.001)-.10);
+        sum+=horizon*(1.-smoothstep(.05,radius,d));
+      }
+      float shade=clamp(1.-sum/24.*2.3,.57,1.);
+      gl_FragColor=vec4(vec3(shade),1.);
+    }`
+});
+const compositeMat=new THREE.ShaderMaterial({depthTest:false,depthWrite:false,toneMapped:false,
+  uniforms:{tColor:{value:colorRT.texture},tAO:{value:aoRT.texture},tDepth:{value:geometryRT.depthTexture},texel:{value:new THREE.Vector2()},near:{value:camera.near},far:{value:camera.far}},
+  vertexShader:postVertex,
+  fragmentShader:`
+    varying vec2 vUv;uniform sampler2D tColor,tAO,tDepth;uniform vec2 texel;uniform float near,far;
+    float viewDistance(vec2 uv){float d=texture2D(tDepth,uv).x;return near*far/(far-d*(far-near));}
+    void main(){
+      float center=viewDistance(vUv),sum=0.,weight=0.;
+      for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++){
+        vec2 uv=vUv+vec2(float(x),float(y))*texel;
+        float w=exp(-abs(viewDistance(uv)-center)*7.);sum+=texture2D(tAO,uv).r*w;weight+=w;
+      }
+      float ao=sum/max(weight,.001);vec3 color=texture2D(tColor,vUv).rgb;
+      gl_FragColor=vec4(color*ao,1.);
+    }`
+});
+function sizeDetail(){
+  const dpr=renderer.getPixelRatio(),w=Math.round(innerWidth*dpr),h=Math.round(innerHeight*dpr);
+  colorRT.setSize(w,h);const factor=innerWidth<600?.5:.65;
+  geometryRT.setSize(Math.max(1,Math.round(w*factor)),Math.max(1,Math.round(h*factor)));
+  aoRT.setSize(geometryRT.width,geometryRT.height);
+  compositeMat.uniforms.texel.value.set(1/aoRT.width,1/aoRT.height);
+  aoMat.uniforms.aspect.value=innerWidth/innerHeight;
+  aoMat.uniforms.resolution.value.set(aoRT.width,aoRT.height);
+  aoMat.uniforms.inverseProjection.value.copy(camera.projectionMatrix).invert();
+}
+sizeDetail();
+function renderFrame(){
+  if(!detailOn){renderer.setRenderTarget(null);renderer.render(scene,camera);return;}
+  renderer.setRenderTarget(colorRT);renderer.render(scene,camera);
+  // Glass, light halos, labels and measurement marks must not occlude the room.
+  const hidden=[];scene.traverse(o=>{if(o.visible && o.material && (o.material.transparent || o.isSprite || o.isLine)){hidden.push(o);o.visible=false;}});
+  const background=scene.background,oldAuto=renderer.shadowMap.autoUpdate;
+  scene.background=null;scene.overrideMaterial=normalMat;renderer.shadowMap.autoUpdate=false;
+  renderer.setRenderTarget(geometryRT);renderer.setClearColor(0xffffff,1);renderer.clear();renderer.render(scene,camera);
+  scene.overrideMaterial=null;scene.background=background;renderer.shadowMap.autoUpdate=oldAuto;
+  for(const o of hidden)o.visible=true;
+  quad.material=aoMat;renderer.setRenderTarget(aoRT);renderer.render(postScene,postCamera);
+  quad.material=compositeMat;renderer.setRenderTarget(null);renderer.render(postScene,postCamera);
+}
+$('qualitybtn').disabled=!canDetail;
+$('qualitybtn').textContent=detailOn?'Detail ✓':'Detail off';
+$('qualitybtn').addEventListener('click',()=>{detailOn=canDetail&&!detailOn;localStorage.setItem('mb3d_detail',detailOn?'1':'0');$('qualitybtn').textContent=detailOn?'Detail ✓':'Detail off';});
+
+/* Viewpoints use the unchanged plan coordinates. */
+for(const button of document.querySelectorAll('[data-view]'))button.addEventListener('click',()=>{
+  const v=button.dataset.view;
+  $('panel').classList.remove('open');$('tools-menu').open=false;
+  if(v==='front'||v==='garden'){
+    setMode('doll');setFloor('whole');
+    Object.assign(orbit,v==='front'?{theta:3.48,phi:.24,r:85,tx:1,ty:22,tz:8}:{theta:.62,phi:.25,r:78,tx:21,ty:21,tz:9});
+    if(innerWidth<560)orbit.r*=1.6;
+  }else{
+    walk.level='L2';setMode('walk');setFloor('l2',true);
+    Object.assign(walk,v==='kitchen'?{x:30,y:9,yaw:Math.PI*.91,pitch:-.035}:{x:31,y:30,yaw:Math.PI*.95,pitch:-.025});
+  }
+});
+const toolbarObserver=new ResizeObserver(()=>document.documentElement.style.setProperty('--toolbar-bottom',($('topbar').getBoundingClientRect().bottom+8)+'px'));
+toolbarObserver.observe($('topbar'));
+// Static model: cache its expensive sun shadow until lighting or visibility changes.
+renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=true;
+
 /* ================= main loop ================= */
 let lastT = performance.now();
 function tick(now){
@@ -1478,18 +1720,20 @@ function tick(now){
   } else {
     orbitCam();
   }
-  renderer.render(scene, camera);
+  renderFrame();
   requestAnimationFrame(tick);
 }
 addEventListener("resize", () => {
   camera.aspect = innerWidth/innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(innerWidth, innerHeight);
+  sizeDetail();
 });
 applyLight(); applyVis(); setMode("doll"); repaintAll();
 $("fixbtn").textContent = FIX_STYLES[fixStyle];
 buildFixtures();
 window.__tour = { orbit, walk, setMode, setFloor,
+  quality(){return {detail:detailOn,depthSupported:canDetail,geometries:renderer.info.memory.geometries,textures:renderer.info.memory.textures};},
   setNight(v){ night = !!v; applyLight(); fixtureGlow(); },
   view(theta, phi, r){ orbit.theta = theta; orbit.phi = phi; if (r) orbit.r = r; },
   go(x, y, lvl, yawDeg){ walk.x = x; walk.y = y; if (lvl) walk.level = lvl; walk.yaw = (yawDeg||0)*Math.PI/180; },
