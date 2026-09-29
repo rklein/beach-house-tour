@@ -1,0 +1,70 @@
+{
+ "schema": "study-index/v1",
+ "updated": "2026-09-29",
+ "studies": [
+  {
+   "id": "2026-09-28-earthquake-gym",
+   "title": "Earthquake, foundation and gym study",
+   "kind": "structure",
+   "date": "2026-09-28",
+   "status": "done",
+   "drive": null
+  },
+  {
+   "id": "2026-09-28-model-vs-rev1",
+   "title": "Model vs Rev-1 drawings: requested changes",
+   "kind": "design",
+   "date": "2026-09-28",
+   "status": "done",
+   "drive": null
+  },
+  {
+   "id": "2026-09-25-lighting",
+   "title": "Lighting study, with calculations",
+   "kind": "lighting",
+   "date": "2026-09-25",
+   "status": "done",
+   "drive": null
+  },
+  {
+   "id": "2026-09-25-first-floor-lighting",
+   "title": "First-floor lighting calculation",
+   "kind": "lighting",
+   "date": "2026-09-25",
+   "status": "done",
+   "drive": null
+  },
+  {
+   "id": "2026-09-25-bedroom-lighting",
+   "title": "Bedroom lighting concepts",
+   "kind": "lighting",
+   "date": "2026-09-25",
+   "status": "done",
+   "drive": null
+  },
+  {
+   "id": "2026-09-25-low-voltage",
+   "title": "Low-voltage study",
+   "kind": "systems",
+   "date": "2026-09-25",
+   "status": "done",
+   "drive": null
+  },
+  {
+   "id": "2026-09-25-island-fit",
+   "title": "Kitchen island fit study",
+   "kind": "design",
+   "date": "2026-09-25",
+   "status": "done",
+   "drive": null
+  },
+  {
+   "id": "2026-09-25-deck",
+   "title": "Deck study",
+   "kind": "design",
+   "date": "2026-09-25",
+   "status": "done",
+   "drive": null
+  }
+ ]
+}
